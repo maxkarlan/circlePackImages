@@ -14,10 +14,16 @@ let rectWidth = [];
 let rectHeight = [];
 let rectBound = [];
 // let bgChoices = [[183, 74, 55]];
-let bgChoices = [[149, 201, 208]];
+// let bgChoices = [[149, 201, 208]];
 // let bgChoices = [[75, 94, 129]];
 // let bgChoices = [[217, 208, 190]];
 // let bgChoices = [[176, 18, 152]];
+// let bgChoices = [[207, 44, 184]];
+// let bgChoices = [[129, 131, 89]];
+// let bgChoices = [[78, 119, 149]];
+// let bgChoices = [[41, 140, 116]];
+// let bgChoices = [[255, 11, 116]];
+let bgChoices = [[213, 115, 132]];
 const maxBranches = 1000;
 const maxDepth = 2;
 let attempts = 0;
@@ -40,57 +46,62 @@ let img;
 let img2;
 
 function preload() {
-    // img = loadImage('fakeRothkoPepe.jpeg');
+   //  img = loadImage('fakeRothkoPepe.jpeg');
     // img = loadImage('albersHomageSquare.jpeg');
-    // img = loadImage('albers6.jpg');
-    // img = loadImage('monaLisa.jpeg');
+   //  img = loadImage('albers6.jpg');
+   //  img = loadImage('monaLisa.jpg');
     // img = loadImage('homerPepe.jpg');
-    // img = loadImage('okeefe.jpg');
+   //  img = loadImage('okeefe.jpg');
     // img = loadImage('IMG_6364.jpg');
-    // img = loadImage('cactus.jpg');
+   //  img = loadImage('cactus.jpg');
     // img = loadImage('ackstract.jpg');
     // img = loadImage('starsFellACK.jpg');
     // img = loadImage('myGirl.jpg');
-    // img = loadImage('yourGirl.jpg');
-    img = loadImage('clyfford.jpg');
+   //  img = loadImage('yourGirl.jpg');
+   //  img = loadImage('clyfford.jpg');
     // img = loadImage('inBloom.jpg');
     // img = loadImage('cactus2.jpg');
     // img = loadImage('staples.jpg');
-    // img = loadImage('kanye.jpg');
+   //  img = loadImage('kanye.jpg');
+   //  img = loadImage('guitarist.jpg');
+   img = loadImage('tromso.jpg');
 }
 
 function setup() {
-    // createCanvas(1014, 760);
-    // if (windowWidth > windowHeight * (2/3)) {
-    //   canvasHeight = windowHeight;
-    //   canvasWidth = canvasHeight * (2/3);
-    // } else {
-    //   canvasWidth = windowWidth;
-    //   canvasHeight = canvasWidth * (3/2);
-    // }
-    canvasWidth = img.width;
-    canvasHeight = img.height;
-    angleMode(DEGREES);
-    myCanvas = createCanvas(canvasWidth, canvasHeight, WEBGL);
-    console.log("image width:", img.width);
-    // myCanvas = createCanvas(img.width, img.height);
-    centerCanvas();
-    window.addEventListener('wheel', (e) => {
-        // Zoom in or out
-        zoom += e.deltaY * -0.01;
-        // Restrict scale
-        zoom = constrain(zoom, 0.5, 2); // Adjust min and max zoom as needed
-    });
-    // colorMode(HSB); // Switch to HSB color mode
-    bgColor = random(bgChoices);
-    styleNums = [1, 2, 3, 4, 5, 6];
-    // style = random(styleNums);
-    style = 1;
-    palette = shuffle(random(paletteChoices));
-    color1 = palette[0];
-    color2 = palette[1];
+   // createCanvas(1014, 760);
+   // if (windowWidth > windowHeight * (2/3)) {
+   //   canvasHeight = windowHeight;
+   //   canvasWidth = canvasHeight * (2/3);
+   // } else {
+   //   canvasWidth = windowWidth;
+   //   canvasHeight = canvasWidth * (3/2);
+   // }
+   canvasWidth = img.width + frameThickness*2;
+   canvasHeight = img.height + frameThickness*2;
+   angleMode(DEGREES);
+   myCanvas = createCanvas(canvasWidth, canvasHeight, WEBGL);
+   console.log("image width:", img.width);
+   // myCanvas = createCanvas(img.width, img.height);
+   centerCanvas();
+   window.addEventListener('wheel', (e) => {
+      // Zoom in or out
+      zoom += e.deltaY * -0.01;
+      // Restrict scale
+      zoom = constrain(zoom, 0.5, 2); // Adjust min and max zoom as needed
+   });
+   // colorMode(HSB); // Switch to HSB color mode
+   bgColor = random(bgChoices);
+   styleNums = [1, 2, 3, 4, 5, 6];
+   // style = random(styleNums);
+   style = 4;
+   trueToPhoto = random() < .5;
+   palette = shuffle(random(paletteChoices));
+   color1 = palette[0];
+   color2 = palette[1];
+
     // randomSeed(9921);
-    numRect = random(1, 4);
+   //  numRect = random(2, 4);
+   numRect = 3;
     if (canvasHeight > canvasWidth) {
         for (let i = 0; i < numRect; i++) {
             isSquare = random() < .5;
@@ -115,8 +126,8 @@ function setup() {
                 rectWidth[i] = random((canvasHeight - (2 * frameThickness))/8, (canvasHeight - (2 * frameThickness)) * (3/4));
                 rectHeight[i] = random((canvasHeight - (2 * frameThickness))/8, (canvasHeight - (2 * frameThickness)) * (3/4));
             }
-            rectX[i] = random(frameThickness + frameToRectPad, (canvasWidth) - (rectWidth) - frameThickness - frameToRectPad);
-            rectY[i] = random(frameThickness + frameToRectPad, (canvasHeight) - (rectHeight) - frameThickness - frameToRectPad);
+            rectX[i] = random(frameThickness + frameToRectPad, (canvasWidth) - (rectWidth[i]) - frameThickness - frameToRectPad);
+            rectY[i] = random(frameThickness + frameToRectPad, (canvasHeight) - (rectHeight[i]) - frameThickness - frameToRectPad);
             rectBound[i] = random(10, 25);
         }
     }
@@ -153,11 +164,12 @@ function windowResized() {
    centerCanvas();
 }
 
+// let layer1 = true;
+// let layer2 = false;
+
 function draw() {
    frameRate(30);
    translate(-width / 2, -height / 2); // Adjust for WEBGL's center origin
-
-   // scale(zoom); // Apply zoom scaling
 
    if (circles.length < totalCircles) {
       currentSize = max(currentSize, minSize);
@@ -188,7 +200,6 @@ function draw() {
          }
       }
    }
-
    if (style == 5) {
       renderer.render(scene, camera);
   }
@@ -202,7 +213,7 @@ function newCircle(){
     // Ensure the circle's center point is within the bounds of the image
     let imgX = constrain(floor(x), 0, img.width - 1);
     let imgY = constrain(floor(y), 0, img.height - 1);
-    let color = img.get(imgX, imgY); // Get the color of the image at the circle's center
+    let color = img.get(imgX - frameThickness, imgY - frameThickness); // Get the color of the image at the circle's center
   
     let newCircle = {
         x: x,
@@ -431,9 +442,18 @@ function scribbleHatch() {
    brushStyle = "pen";
    // Render pre-calculated scribbles
    for (let scribble of circle.scribbles) {
-      let c = color(scribble[1], 100, 100);
-      brush.set(brushStyle, c, 1);
-      brush.spline(scribble[0], 1);
+      if (trueToPhoto) {
+         let c0 = circle.color[0] + random(-20, 20);
+         let c1 = circle.color[1] + random(-20, 20);
+         let c2 = circle.color[2] + random(-20, 20);
+         let c = color(c0, c1, c2);
+         brush.set(brushStyle, c, 1);
+         brush.spline(scribble[0], 1);
+      } else {
+         let c = color(230, 150, scribble[1]);
+         brush.set(brushStyle, c, 1);
+         brush.spline(scribble[0], 1);
+      }
    }
 
    pop(); // Revert transformations
