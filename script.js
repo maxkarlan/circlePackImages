@@ -1,13 +1,15 @@
 let styleChoices = [];
 let circles = [];
-let maxSize = 25; // Maximum radius size
-let minSize = 1; // Minimum radius size
-let totalCircles = 2000; // Total number of circles to attempt to pack
+let maxSize = 45; // Maximum radius size
+let minSize = .25; // Minimum radius size
+let totalSprays = 10;
+let totalCircles = 350; // Total number of circles to attempt to pack
+// let totalSprays = 100;
 let attemptLimit = 100; // Maximum attempts before moving to a smaller size
 sizeTier = 1;
 let denom = 2;
-let frameThickness = 15; // Thickness of the frame
-let frameToRectPad = 10; // Space between the frame and the rectangle range
+let frameThickness = 35; // Thickness of the frame
+let frameToRectPad = 25; // Space between the frame and the rectangle range
 let rectX = [];
 let rectY = [];
 let rectWidth = [];
@@ -23,7 +25,9 @@ let rectBound = [];
 // let bgChoices = [[78, 119, 149]];
 // let bgChoices = [[41, 140, 116]];
 // let bgChoices = [[255, 11, 116]];
-let bgChoices = [[213, 115, 132]];
+// let bgChoices = [[213, 115, 132]];
+let bgChoices = [[255, 255, 255]];
+let bgStyleChoices = ["vertStrips", "horStrips", "circles"];
 const maxBranches = 1000;
 const maxDepth = 2;
 let attempts = 0;
@@ -51,20 +55,21 @@ function preload() {
    //  img = loadImage('albers6.jpg');
    //  img = loadImage('monaLisa.jpg');
     // img = loadImage('homerPepe.jpg');
-   //  img = loadImage('okeefe.jpg');
+    img = loadImage('okeefe.jpg');
     // img = loadImage('IMG_6364.jpg');
    //  img = loadImage('cactus.jpg');
     // img = loadImage('ackstract.jpg');
-    // img = loadImage('starsFellACK.jpg');
-    // img = loadImage('myGirl.jpg');
+   //  img = loadImage('starsFellACK.jpg');
+   //  img = loadImage('myGirl.jpg');
    //  img = loadImage('yourGirl.jpg');
    //  img = loadImage('clyfford.jpg');
-    // img = loadImage('inBloom.jpg');
+   //  img = loadImage('inBloom.jpg');
     // img = loadImage('cactus2.jpg');
     // img = loadImage('staples.jpg');
    //  img = loadImage('kanye.jpg');
    //  img = loadImage('guitarist.jpg');
-   img = loadImage('tromso.jpg');
+   // img = loadImage('tromso.jpg');
+   // img = loadImage('almondTreeZoomed.jpg');
 }
 
 function setup() {
@@ -76,8 +81,10 @@ function setup() {
    //   canvasWidth = windowWidth;
    //   canvasHeight = canvasWidth * (3/2);
    // }
-   canvasWidth = img.width + frameThickness*2;
-   canvasHeight = img.height + frameThickness*2;
+   // canvasWidth = img.width + frameThickness*2;
+   // canvasHeight = img.height + frameThickness*2;
+   canvasWidth = img.width - 8;
+   canvasHeight = img.height;
    angleMode(DEGREES);
    myCanvas = createCanvas(canvasWidth, canvasHeight, WEBGL);
    console.log("image width:", img.width);
@@ -94,14 +101,42 @@ function setup() {
    styleNums = [1, 2, 3, 4, 5, 6];
    // style = random(styleNums);
    style = 4;
-   trueToPhoto = random() < .5;
+   trueToPhoto = random() < 1;
+   // bgStyle = random(bgStyleChoices);
+   bgStyle = "circles"
+
+   if (bgStyle == "circles") {
+      totalSprays = 50;
+   }
+
    palette = shuffle(random(paletteChoices));
    color1 = palette[0];
    color2 = palette[1];
 
+   let top = random() < .5;
+   let right = random() < .5;
+   x1 = random(0, canvasWidth);
+   y2 = random(0, canvasHeight);
+   xEnd = random(canvasWidth/4, (canvasWidth*3)/4);
+   yEnd = random(canvasHeight/4, (canvasHeight*3)/4);
+   if (top) {
+      y1 = 0;
+   } else if (!top) {
+      y1 = canvasHeight;
+   }
+   console.log("y1:", y1);
+   if (right) {
+      x2 = 0;
+   } else if (!right) {
+      x2 = canvasWidth;
+   }
+
     // randomSeed(9921);
    //  numRect = random(2, 4);
-   numRect = 3;
+
+   lineObstacles = random() < 1;
+
+   numRect = 0;
     if (canvasHeight > canvasWidth) {
         for (let i = 0; i < numRect; i++) {
             isSquare = random() < .5;
@@ -114,7 +149,8 @@ function setup() {
             }
             rectX[i] = random(frameThickness + frameToRectPad, canvasWidth - rectWidth[i] - frameThickness - frameToRectPad);
             rectY[i] = random(frameThickness + frameToRectPad, canvasHeight - rectHeight[i] - frameThickness - frameToRectPad);
-            rectBound[i] = random(10, 25);
+            // rectBound[i] = random(10, 25);
+            rectBound[i] = random(25, 50);
         }
     } else {
         for (let i = 0; i < numRect; i++) {
@@ -128,7 +164,8 @@ function setup() {
             }
             rectX[i] = random(frameThickness + frameToRectPad, (canvasWidth) - (rectWidth[i]) - frameThickness - frameToRectPad);
             rectY[i] = random(frameThickness + frameToRectPad, (canvasHeight) - (rectHeight[i]) - frameThickness - frameToRectPad);
-            rectBound[i] = random(10, 25);
+            // rectBound[i] = random(10, 25);
+            rectBound[i] = random(35, 65);
         }
     }
     const d = (new Date()).getMilliseconds();
@@ -164,14 +201,64 @@ function windowResized() {
    centerCanvas();
 }
 
-// let layer1 = true;
-// let layer2 = false;
+let layer1 = true;
+let layer2 = false;
 
 function draw() {
    frameRate(30);
    translate(-width / 2, -height / 2); // Adjust for WEBGL's center origin
 
-   if (circles.length < totalCircles) {
+   if (layer1) {
+      for (let i = 0; i < totalSprays; i++){
+         // let x = random(frameThickness, canvasWidth - frameThickness);
+         // let y = random(frameThickness, canvasHeight - frameThickness);
+         let brushStyle = "marker2";
+         if (bgStyle == "vertStrips") {
+            x = (canvasWidth/(totalSprays*2))*(i + 1);
+            y = height/2;
+         } else if (bgStyle == "horStrips") {
+            x = width/2;
+            y = (canvasHeight/(totalSprays*2))*(i + 1);
+         } else if (bgStyle == "circles") {
+            x = random(canvasWidth);
+            y = random(canvasHeight);
+         }
+         let imgX = constrain(floor(x), 0, img.width);
+         let imgY = constrain(floor(y), 0, img.height);
+         let color = img.get(imgX, imgY);
+         color[1] = 25;
+         color[2] = 80;
+         brush.set(brushStyle, color, 1);
+         // Render pre-calculated scribbles
+         brush.fill(color, 100);
+         if (bgStyle == "vertStrips") {
+            brush.rect((canvasWidth/totalSprays)*i, frameThickness, (canvasWidth/totalSprays)*1.5, canvasHeight);
+         } else if (bgStyle == "horStrips") {
+            brush.rect(frameThickness, (canvasHeight/totalSprays)*i, canvasWidth, (canvasHeight/totalSprays)*1.5);
+         } else if (bgStyle == "circles") {
+            brush.circle(x, y, 200);
+         }
+
+      }
+         // if (color[1] <= 120) {
+         //    color[1] = color[1] + 150;
+         // } else if (color[1] > 120) {
+         //    color[1] = color[1] - 80;
+         // }
+         // if (color[0] <= 70) {
+         //    color[0] = color[0] + 120;
+         // } else if (color[0] < 170 && color[0] > 70) {
+         //    color[0] = color[0] + 90;
+         // }
+
+         // color[1] = color[1] - 70;
+         // let brushStyle = brush.box()[Math.floor(Math.random() * brush.box().length)];
+
+   }
+      layer1 = false;
+      layer2 = true;
+   
+   if (layer2 && circles.length < totalCircles) {
       currentSize = max(currentSize, minSize);
       let maxCircles;
       circleCounts[currentSize] = 0; // Initialize count for the current size
@@ -200,9 +287,9 @@ function draw() {
          }
       }
    }
-   if (style == 5) {
+   if (layer2 && style == 5) {
       renderer.render(scene, camera);
-  }
+   }
 }
 
 function newCircle(){
@@ -433,13 +520,96 @@ function contourHatch(){
    pop(); // Revert transformations
 }
 
+// function spray() {
+//    let circle = circles[circles.length - 1];
+//    push();
+//    translate(circle.x, circle.y);
+
+//    let brushStyle = brush.box()[Math.floor(Math.random() * brush.box().length)];
+//    brushStyle = "spray";
+
+//    let c0 = circle.color[0] + random(-20, 20);
+//    let c1 = circle.color[1] + random(-20, 20);
+//    let c2 = circle.color[2] + random(-20, 20);
+//    let c = color(c0, c1, c2);
+//    brush.set(brushStyle, c, 1);
+//    // brush.spline(scribble[0], 1);
+
+//    // fill(circle.color);
+//    // noStroke();
+//    // ellipse(0, 0, circle.r * 2, circle.r * 2);
+// }
+
+// function sprayHatch() {
+//    let circle = sprayCircles[sprayCircles.length - 1];
+//    push(); // Isolate transformations
+//    translate(circle.x, circle.y); // Move to the circle's center
+
+//    let brushStyle = brush.box()[Math.floor(Math.random() * brush.box().length)];
+//    brushStyle = "spray";
+//    // Render pre-calculated scribbles
+//    for (let scribble of circle.scribbles) {
+//       if (trueToPhoto) {
+//          let c0 = circle.color[0] + random(-20, 20);
+//          let c1 = circle.color[1] + random(-20, 20);
+//          let c2 = circle.color[2] + random(-20, 20);
+//          let c = color(c0, c1, c2);
+//          brush.set(brushStyle, c, 1);
+//          brush.spline(scribble[0], 1);
+//       } else {
+//          let c = color(230, 150, scribble[1]);
+//          brush.set(brushStyle, c, 1);
+//          brush.spline(scribble[0], 1);
+//       }
+//    }
+
+//    pop(); // Revert transformations
+// }
+
 function scribbleHatch() {
    let circle = circles[circles.length - 1];
    push(); // Isolate transformations
    translate(circle.x, circle.y); // Move to the circle's center
 
    let brushStyle = brush.box()[Math.floor(Math.random() * brush.box().length)];
-   brushStyle = "pen";
+   brushStyle = "spray";
+
+   brush.add("customSpray1", {
+      type: "spray",       // this is the TIP TYPE: choose standard / spray / marker / custom / image
+      weight: 5,          // Base weight of the brush tip
+      vibration: 3,        // Vibration of the lines, spread
+      definition: 0.05,     // Between 0 and 1
+      quality: 5,          // + quality = more continuous line
+      opacity: 50,         // Base opacity of the brush (this will be affected by pressure)
+      spacing: 10,          // Spacing between the points that compose the brush stroke
+      blend: true,         // Activate / Disable realistic color mixing
+      pressure: {
+          type: "standard", // Use “standard” for simple gauss bell curve
+          curve: [0.15,0.2],  // If "standard", pick a and b values for the gauss curve
+          min_max: [0.5,1.2]  // For both cases, define min and max pressure (reverse for inverted presure)
+      },
+      // For "custom" and "image" types, you can define the tip angle rotation here.
+      rotate: "random", // "none" disables rotation | "natural" follows the stroke | "random"
+   })
+
+   brush.add("customMarker", {
+      type: "marker",       // this is the TIP TYPE: choose standard / spray / marker / custom / image
+      weight: 20,          // Base weight of the brush tip
+      vibration: 2,        // Vibration of the lines, spread
+      definition: 0.85,     // Between 0 and 1
+      quality: 8,          // + quality = more continuous line
+      opacity: 70,         // Base opacity of the brush (this will be affected by pressure)
+      spacing: 5,          // Spacing between the points that compose the brush stroke
+      blend: true,         // Activate / Disable realistic color mixing
+      pressure: {
+          type: "standard", // Use “standard” for simple gauss bell curve
+          curve: [0.15,0.2],  // If "standard", pick a and b values for the gauss curve
+          min_max: [0.5,1.2]  // For both cases, define min and max pressure (reverse for inverted presure)
+      },
+      // For "custom" and "image" types, you can define the tip angle rotation here.
+      rotate: "random", // "none" disables rotation | "natural" follows the stroke | "random"
+   })
+
    // Render pre-calculated scribbles
    for (let scribble of circle.scribbles) {
       if (trueToPhoto) {
@@ -447,10 +617,10 @@ function scribbleHatch() {
          let c1 = circle.color[1] + random(-20, 20);
          let c2 = circle.color[2] + random(-20, 20);
          let c = color(c0, c1, c2);
-         brush.set(brushStyle, c, 1);
+         brush.set("pen", c, 1);
          brush.spline(scribble[0], 1);
       } else {
-         let c = color(230, 150, scribble[1]);
+         let c = color(scribble[1], 160, 165);
          brush.set(brushStyle, c, 1);
          brush.spline(scribble[0], 1);
       }
@@ -655,6 +825,44 @@ function collides(circle, additional_circles=[]) {
       circle.y - circle.r < frameInnerEdgeY ||
       circle.y + circle.r > frameOuterEdgeY) {
       return true;
+   }
+
+   if (lineObstacles) {
+      // Define an array of lines with their start and end points
+      let lines = [
+         { start: { x: x1, y: y1 }, end: { x: xEnd, y: yEnd } },
+         { start: { x: x2, y: y2 }, end: { x: xEnd, y: yEnd } }
+         // Add more lines here as needed
+         // { start: { x: startX, y: startY }, end: { x: endX, y: endY } },
+      ];
+
+      let buffer = 40; // Buffer distance
+
+      // Check collision with each line
+      for (let i = 0; i < lines.length; i++) {
+         let lineStart = lines[i].start;
+         let lineEnd = lines[i].end;
+
+         // Calculate the normal vector to the line
+         let lineVector = { x: lineEnd.x - lineStart.x, y: lineEnd.y - lineStart.y };
+         let normalVector = { x: -lineVector.y, y: lineVector.x };
+         let normalLength = sqrt(normalVector.x * normalVector.x + normalVector.y * normalVector.y);
+         normalVector.x /= normalLength;
+         normalVector.y /= normalLength;
+
+         // Calculate the distance from the circle center to the line
+         let circleToLineStart = { x: circle.x - lineStart.x, y: circle.y - lineStart.y };
+         let distance = abs(circleToLineStart.x * normalVector.x + circleToLineStart.y * normalVector.y);
+
+         // Check if the circle is within the buffer zone of the line
+         if (distance < circle.r + buffer) {
+            // Check if the circle is between the start and end points of the line
+            let dotProduct = circleToLineStart.x * lineVector.x + circleToLineStart.y * lineVector.y;
+            if (dotProduct >= 0 && dotProduct <= lineVector.x * lineVector.x + lineVector.y * lineVector.y) {
+               return true; // Collision detected
+            }
+         }
+      }
    }
 
    // Check collision with the rectangle
